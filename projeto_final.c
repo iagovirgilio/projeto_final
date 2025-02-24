@@ -34,8 +34,8 @@ char sensor1_message[50] = "Nenhum movimento (Sensor A)";
 char sensor2_message[50] = "Botão B: pressione para BOOTSEL";
 
 // Buffer para resposta HTTP com HTML estilizado
-char http_response[4096];
-char html_body[2048];
+char http_response[10240];
+char html_body[10240];
 
 // Controle do alarme disparado pelo sensor A
 volatile bool sensor_alarm_triggered = false;
@@ -116,7 +116,12 @@ static err_t http_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_
         return ERR_OK;
     }
     char *request = (char *)p->payload;
-    if (strstr(request, "GET /led1/on")) {
+    if (strstr(request, "GET /status")) {
+        // Atualiza o sensor1_message, se necessário
+        // Responde apenas com o status do sensor A
+        char status[100];
+        snprintf(status, sizeof(status), "%s", sensor1_message);
+    } else if (strstr(request, "GET /led1/on")) {
         gpio_put(LED1_PIN, 1);
     } else if (strstr(request, "GET /led1/off")) {
         gpio_put(LED1_PIN, 0);

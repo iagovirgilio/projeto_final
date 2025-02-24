@@ -6,14 +6,53 @@
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <title>House Control</title>
   <style>
-    body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: #f0f2f5; }
-    .container { max-width: 600px; margin: 50px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; }
-    h1, h2 { text-align: center; color: #333333; }
-    .control-section { margin: 20px 0; }
-    .control-section p { text-align: center; margin: 10px 0; }
-    .button { display: inline-block; padding: 12px 24px; margin: 5px; border: none; border-radius: 4px; background: #6200EE; color: #ffffff; text-decoration: none; font-weight: 500; transition: background 0.3s ease; }
-    .button:hover { background: #3700B3; }
-    .status { font-size: 0.9em; color: #555555; text-align: center; margin-top: 20px; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Roboto', sans-serif;
+      background: #f0f2f5;
+    }
+    .container {
+      max-width: 600px;
+      margin: 50px auto;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+    }
+    h1,
+    h2 {
+      text-align: center;
+      color: #333333;
+    }
+    .control-section {
+      margin: 20px 0;
+    }
+    .control-section p {
+      text-align: center;
+      margin: 10px 0;
+    }
+    .button {
+      display: inline-block;
+      padding: 12px 24px;
+      margin: 5px;
+      border: none;
+      border-radius: 4px;
+      background: #6200EE;
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: 500;
+      transition: background 0.3s ease;
+    }
+    .button:hover {
+      background: #3700B3;
+    }
+    .status {
+      font-size: 0.9em;
+      color: #555555;
+      text-align: center;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
@@ -31,8 +70,9 @@
     </div>
     <div class="control-section">
       <h2>Status</h2>
-      <p>Sensor A: %s</p>
+      <p>Sensor A: <span id="sensorStatus">%s</span></p>
       <p>Botão B: %s</p>
+      <p><a class="button" href="/status">Update Status</a></p>
     </div>
   </div>
 </body>
