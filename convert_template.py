@@ -17,7 +17,7 @@ data = data.replace('"', '\\"')
 data = data.replace('\n', '\\n"\n"')
 
 output = '#ifndef TEMPLATE_H\n#define TEMPLATE_H\n\n'
-output += 'const char html_template[] = "\n"' + data + '";\n\n'
+output += 'const char html_template[] = \"' + data + '";\n\n'
 output += '#endif // TEMPLATE_H\n'
 
 with open(output_file, 'w', encoding='utf-8') as f:

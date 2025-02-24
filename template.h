@@ -1,8 +1,7 @@
 #ifndef TEMPLATE_H
 #define TEMPLATE_H
 
-const char html_template[] = "\n"
-"<!DOCTYPE html>\n"
+const char html_template[] = "<!DOCTYPE html>\n"
 "<html lang=\"pt\">\n"
 "<head>\n"
 "  <meta charset=\"UTF-8\">\n"
