@@ -2,12 +2,6 @@
 #define TEMPLATE_H
 
 const char html_template[] = "\n"
-"HTTP/1.1 200 OK\n"
-"Cache-Control: no-cache, no-store, must-revalidate\n"
-"Pragma: no-cache\n"
-"Expires: 0\n"
-"Content-Type: text/html; charset=UTF-8\n"
-"\n"
 "<!DOCTYPE html>\n"
 "<html lang=\"pt\">\n"
 "<head>\n"

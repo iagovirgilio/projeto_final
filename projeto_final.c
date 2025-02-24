@@ -34,7 +34,8 @@ char sensor1_message[50] = "Nenhum movimento (Sensor A)";
 char sensor2_message[50] = "Botão B: pressione para BOOTSEL";
 
 // Buffer para resposta HTTP com HTML estilizado
-char http_response[2048];
+char http_response[4096];
+char html_body[2048];
 
 // Controle do alarme disparado pelo sensor A
 volatile bool sensor_alarm_triggered = false;
@@ -88,7 +89,24 @@ void gpio_callback(uint gpio, uint32_t events) {
 
 // Função para criar a resposta HTTP com HTML estilizado
 void create_http_response() {
-    snprintf(http_response, sizeof(http_response), html_template, sensor1_message, sensor2_message);
+    // Preenche o corpo HTML substituindo os placeholders (%s)
+    snprintf(html_body, sizeof(html_body), html_template, sensor1_message, sensor2_message);
+
+    int body_length = strlen(html_body);
+
+    // Constrói o header HTTP com o Content-Length calculado e Connection: close
+    char header[256];
+    snprintf(header, sizeof(header),
+        "HTTP/1.1 200 OK\r\n"
+        "Cache-Control: no-cache, no-store, must-revalidate\r\n"
+        "Pragma: no-cache\r\n"
+        "Expires: 0\r\n"
+        "Content-Length: %d\r\n"
+        "Content-Type: text/html; charset=UTF-8\r\n"
+        "Connection: close\r\n\r\n", body_length);
+
+    // Concatena o header e o corpo para formar a resposta final
+    snprintf(http_response, sizeof(http_response), "%s%s", header, html_body);
 }
 
 // Callback para processar as requisições HTTP
