@@ -11,6 +11,7 @@
       padding: 0;
       font-family: 'Roboto', sans-serif;
       background: #f0f2f5;
+      box-sizing: border-box;
     }
     .container {
       max-width: 600px;
@@ -31,6 +32,17 @@
     .control-section p {
       text-align: center;
       margin: 10px 0;
+    }
+    .control-section.comodos p {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 10px 0;
+    }
+    .control-section.comodos p strong {
+      flex: 1;
+      text-align: left;
+      margin-right: 10px;
     }
     .button {
       display: inline-block;
@@ -53,12 +65,18 @@
       text-align: center;
       margin-top: 20px;
     }
+    .status p {
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      margin: 10px 0;
+    }
   </style>
 </head>
 <body>
   <div class="container">
     <h1>House Control</h1>
-    <div class="control-section">
+    <div class="control-section comodos">
       <h2>ILUMINAÇÃO (Cômodos)</h2>
       <p><strong>SALA:</strong> <a class="button" href="/led1/on">Ligar</a> <a class="button" href="/led1/off">Desligar</a></p>
       <p><strong>COZINHA:</strong> <a class="button" href="/led2/on">Ligar</a> <a class="button" href="/led2/off">Desligar</a></p>
@@ -66,13 +84,15 @@
     </div>
     <div class="control-section">
       <h2>ALARME</h2>
-      <p><a class="button" href="/buzzer/on">Ativar</a> <a class="button" href="/buzzer/off">Desativar</a></p>
+      <p><a class="button" href="/buzzer/on">Ligar</a> <a class="button" href="/buzzer/off">Desligar</a></p>
     </div>
-    <div class="control-section">
+    <div class="control-section status">
       <h2>STATUS</h2>
       <p>Sensor A: <span id="sensorStatus">%s</span></p>
       <p>%s</p>
-      <p><a class="button" href="/status">Update Status</a></p>
+      <div>
+        <a class="button" href="/status">Update Status</a></p>
+      </div>
     </div>
   </div>
 </body>
