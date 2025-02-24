@@ -39,6 +39,7 @@
     "files.associations": {
         "i2c.h": "c",
         "pwm.h": "c",
-        "ssd1306.h": "c"
+        "ssd1306.h": "c",
+        "template.h": "c"
     }
 }

@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include "inc/ssd1306.h"      // Biblioteca do display SSD1306
 #include "inc/font.h"         // Fonte utilizada pelo display
+#include "template.h"
 
 // Configuração do I2C para o display OLED
 #define I2C_SDA_PIN    14
@@ -87,47 +88,7 @@ void gpio_callback(uint gpio, uint32_t events) {
 
 // Função para criar a resposta HTTP com HTML estilizado
 void create_http_response() {
-    snprintf(http_response, sizeof(http_response),
-        "HTTP/1.1 200 OK\r\n"
-        "Cache-Control: no-cache, no-store, must-revalidate\r\n"
-        "Pragma: no-cache\r\n"
-        "Expires: 0\r\n"
-        "Content-Type: text/html; charset=UTF-8\r\n\r\n"
-        "<!DOCTYPE html>"
-        "<html lang=\"pt\">"
-        "<head>"
-        "  <meta charset=\"UTF-8\">"
-        "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
-        "  <link href=\"https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap\" rel=\"stylesheet\">"
-        "  <title>House Control</title>"
-        "  <style>"
-        "    body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: #f0f2f5; }"
-        "    .container { max-width: 600px; margin: 50px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; }"
-        "    h1, h2 { text-align: center; color: #333333; }"
-        "    .control-section { margin: 20px 0; }"
-        "    .control-section p { text-align: center; margin: 10px 0; }"
-        "    .button { display: inline-block; padding: 12px 24px; margin: 5px; border: none; border-radius: 4px; background: #6200EE; color: #ffffff; text-decoration: none; font-weight: 500; transition: background 0.3s ease; }"
-        "    .button:hover { background: #3700B3; }"
-        "    .status { font-size: 0.9em; color: #555555; text-align: center; margin-top: 20px; }"
-        "  </style>"
-        "</head>"
-        "<body>"
-        "  <div class=\"container\">"
-        "    <h1>House Control</h1>"
-        "    <div class=\"control-section\">"
-        "      <h2>LEDs (Cômodos)</h2>"
-        "      <p>Sala (LED 1): <a class=\"button\" href=\"/led1/on\">Ligar</a> <a class=\"button\" href=\"/led1/off\">Desligar</a></p>"
-        "      <p>Cozinha (LED 2): <a class=\"button\" href=\"/led2/on\">Ligar</a> <a class=\"button\" href=\"/led2/off\">Desligar</a></p>"
-        "      <p>Quarto (LED 3): <a class=\"button\" href=\"/led3/on\">Ligar</a> <a class=\"button\" href=\"/led3/off\">Desligar</a></p>"
-        "    </div>"
-        "    <div class=\"control-section\">"
-        "      <h2>Buzzer (Alarme)</h2>"
-        "      <p><a class=\"button\" href=\"/buzzer/on\">Ativar</a> <a class=\"button\" href=\"/buzzer/off\">Desativar</a></p>"
-        "    </div>"
-        "  </div>"
-        "</body>"
-        "</html>\r\n"
-    );
+    snprintf(http_response, sizeof(http_response), html_template, sensor1_message, sensor2_message);
 }
 
 // Callback para processar as requisições HTTP
