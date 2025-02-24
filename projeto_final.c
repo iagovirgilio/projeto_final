@@ -173,24 +173,22 @@ static void start_http_server(void) {
 void update_display() {
     char buffer[32];
     ssd1306_fill(&ssd, false);
-    // Exibe o cabeçalho
-    ssd1306_draw_string(&ssd,"House Control", 0, 0);
 
     // Exibe o status do Wi-Fi e o IP, se conectado
     if (cyw43_state.netif[0].ip_addr.addr != 0) {
-        snprintf(buffer, sizeof(buffer), "IP: %d.%d.%d.%d",
+        snprintf(buffer, sizeof(buffer), "%d.%d.%d.%d",
                  ((uint8_t*)&(cyw43_state.netif[0].ip_addr.addr))[0],
                  ((uint8_t*)&(cyw43_state.netif[0].ip_addr.addr))[1],
                  ((uint8_t*)&(cyw43_state.netif[0].ip_addr.addr))[2],
                  ((uint8_t*)&(cyw43_state.netif[0].ip_addr.addr))[3]);
-        ssd1306_draw_string(&ssd, "WiFi: Conectado",0, 10);
+        ssd1306_draw_string(&ssd, "WIFI: CONECTADO",0, 10);
         ssd1306_draw_string(&ssd, buffer, 0, 20);
     } else {
-        ssd1306_draw_string(&ssd,"WiFi: Desconectado", 0, 10);
+        ssd1306_draw_string(&ssd,"WIFI: DESCONECTADO", 0, 10);
     }
     // Exibe os estados dos sensores
-    ssd1306_draw_string(&ssd,sensor1_message,0, 30);
-    ssd1306_draw_string(&ssd, sensor2_message,0, 40);
+    // ssd1306_draw_string(&ssd,sensor1_message,0, 30);
+    // ssd1306_draw_string(&ssd, sensor2_message,0, 40);
     ssd1306_send_data(&ssd);
 }
 
@@ -219,12 +217,12 @@ int main() {
         return 1;
     }
     cyw43_arch_enable_sta_mode();
-    printf("Conectando ao Wi-Fi...\n");
+    printf("CONECTANDO AO WIFI...\n");
     if (cyw43_arch_wifi_connect_timeout_ms(WIFI_SSID, WIFI_PASS, CYW43_AUTH_WPA2_AES_PSK, 10000)) {
-        printf("Falha ao conectar ao Wi-Fi\n");
+        printf("FALHA AO CONECTAR\n");
         return 1;
     } else {
-        printf("Conectado.\n");
+        printf("CONECTADO.\n");
         uint8_t *ip_address = (uint8_t *)&(cyw43_state.netif[0].ip_addr.addr);
         printf("Endereço IP %d.%d.%d.%d\n", ip_address[0], ip_address[1], ip_address[2], ip_address[3]);
     }
