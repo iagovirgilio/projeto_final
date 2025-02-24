@@ -5,10 +5,18 @@
 #include "pico/bootrom.h"     // Para a função reset_usb_boot()
 #include "hardware/gpio.h"
 #include "hardware/pwm.h"     // Para controle do PWM do buzzer
+#include "hardware/i2c.h"     // Para comunicação I2C com o display
 #include <string.h>
 #include <stdio.h>
+#include "inc/ssd1306.h"      // Biblioteca do display SSD1306
+#include "inc/font.h"         // Fonte utilizada pelo display
 
-// Definição dos pinos
+// Configuração do I2C para o display OLED
+#define I2C_SDA_PIN    14
+#define I2C_SCL_PIN    15
+#define I2C_PORT       i2c1
+
+// Definição dos pinos do projeto
 #define LED1_PIN    11   // LED para o cômodo 1 (ex.: Sala)
 #define LED2_PIN    12   // LED para o cômodo 2 (ex.: Cozinha)
 #define LED3_PIN    13   // LED para o cômodo 3 (ex.: Quarto)
@@ -17,8 +25,8 @@
 #define BUTTON1_PIN 5    // Sensor de movimento - Botão A
 #define BUTTON2_PIN 6    // Botão B (usado para acionar o modo BOOTSEL)
 
-#define WIFI_SSID "Iago"          // Substitua pelo nome da sua rede Wi-Fi
-#define WIFI_PASS "Iago@8022"      // Substitua pela senha da sua rede Wi-Fi
+#define WIFI_SSID "Iago"          // Nome da rede Wi-Fi
+#define WIFI_PASS "Iago@8022"      // Senha da rede Wi-Fi
 
 // Mensagens de estado
 char sensor1_message[50] = "Nenhum movimento (Sensor A)";
@@ -41,21 +49,20 @@ const uint32_t debounce_delay_ms = 50;
 volatile bool sensor1_pressed = false;  // Botão A
 volatile bool sensor2_pressed = false;  // Botão B
 
+// Instância do display OLED
+static ssd1306_t ssd;
+
 // Funções para controle do buzzer via PWM
 void buzzer_start(uint frequency) {
-    // Configura o pino do buzzer para PWM
     uint slice_num = pwm_gpio_to_slice_num(BUZZER_PIN);
     uint channel = pwm_gpio_to_channel(BUZZER_PIN);  // Obtém o canal correto
     gpio_set_function(BUZZER_PIN, GPIO_FUNC_PWM);
-    // Configuração para gerar a frequência desejada:
-    // frequency = clock / (divider * (wrap + 1))
     float divider = 125.0f;             // Divisor fixo
-    uint32_t clock = 125000000;           // Clock padrão do Pico (125 MHz)
+    uint32_t clock = 125000000;         // Clock padrão do Pico (125 MHz)
     uint32_t wrap = clock / (divider * frequency) - 1;
     pwm_set_clkdiv(slice_num, divider);
     pwm_set_wrap(slice_num, wrap);
-    // Configura duty cycle de 50% usando o canal correto
-    pwm_set_chan_level(slice_num, channel, (wrap + 1) / 2);
+    pwm_set_chan_level(slice_num, channel, (wrap + 1) / 2);  // Duty cycle de 50%
     pwm_set_enabled(slice_num, true);
 }
 
@@ -64,14 +71,13 @@ void buzzer_stop() {
     pwm_set_enabled(slice_num, false);
 }
 
-// Callback de interrupção para os sensores (botões)
+// Callback de interrupção para os botões (sensores)
 void gpio_callback(uint gpio, uint32_t events) {
     uint32_t current_time = to_ms_since_boot(get_absolute_time());
     if (gpio == BUTTON1_PIN) {
         if (current_time - last_interrupt_time_sensor1 < debounce_delay_ms) return;
         last_interrupt_time_sensor1 = current_time;
-        // Botão com pull-up: pressionado = LOW (0)
-        sensor1_pressed = (gpio_get(BUTTON1_PIN) == 0);
+        sensor1_pressed = (gpio_get(BUTTON1_PIN) == 0);  // Botão com pull-up: pressionado = 0
     } else if (gpio == BUTTON2_PIN) {
         if (current_time - last_interrupt_time_sensor2 < debounce_delay_ms) return;
         last_interrupt_time_sensor2 = current_time;
@@ -95,52 +101,14 @@ void create_http_response() {
         "  <link href=\"https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap\" rel=\"stylesheet\">"
         "  <title>House Control</title>"
         "  <style>"
-        "    body {"
-        "      margin: 0;"
-        "      padding: 0;"
-        "      font-family: 'Roboto', sans-serif;"
-        "      background: #f0f2f5;"
-        "    }"
-        "    .container {"
-        "      max-width: 600px;"
-        "      margin: 50px auto;"
-        "      background: #ffffff;"
-        "      border-radius: 8px;"
-        "      box-shadow: 0 4px 12px rgba(0,0,0,0.1);"
-        "      padding: 20px;"
-        "    }"
-        "    h1, h2 {"
-        "      text-align: center;"
-        "      color: #333333;"
-        "    }"
-        "    .control-section {"
-        "      margin: 20px 0;"
-        "    }"
-        "    .control-section p {"
-        "      text-align: center;"
-        "      margin: 10px 0;"
-        "    }"
-        "    .button {"
-        "      display: inline-block;"
-        "      padding: 12px 24px;"
-        "      margin: 5px;"
-        "      border: none;"
-        "      border-radius: 4px;"
-        "      background: #6200EE;"
-        "      color: #ffffff;"
-        "      text-decoration: none;"
-        "      font-weight: 500;"
-        "      transition: background 0.3s ease;"
-        "    }"
-        "    .button:hover {"
-        "      background: #3700B3;"
-        "    }"
-        "    .status {"
-        "      font-size: 0.9em;"
-        "      color: #555555;"
-        "      text-align: center;"
-        "      margin-top: 20px;"
-        "    }"
+        "    body { margin: 0; padding: 0; font-family: 'Roboto', sans-serif; background: #f0f2f5; }"
+        "    .container { max-width: 600px; margin: 50px auto; background: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; }"
+        "    h1, h2 { text-align: center; color: #333333; }"
+        "    .control-section { margin: 20px 0; }"
+        "    .control-section p { text-align: center; margin: 10px 0; }"
+        "    .button { display: inline-block; padding: 12px 24px; margin: 5px; border: none; border-radius: 4px; background: #6200EE; color: #ffffff; text-decoration: none; font-weight: 500; transition: background 0.3s ease; }"
+        "    .button:hover { background: #3700B3; }"
+        "    .status { font-size: 0.9em; color: #555555; text-align: center; margin-top: 20px; }"
         "  </style>"
         "</head>"
         "<body>"
@@ -162,17 +130,13 @@ void create_http_response() {
     );
 }
 
-
 // Callback para processar as requisições HTTP
 static err_t http_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err) {
     if (p == NULL) {
         tcp_close(tpcb);
         return ERR_OK;
     }
-
     char *request = (char *)p->payload;
-
-    // Comandos para controle dos LEDs
     if (strstr(request, "GET /led1/on")) {
         gpio_put(LED1_PIN, 1);
     } else if (strstr(request, "GET /led1/off")) {
@@ -186,7 +150,6 @@ static err_t http_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_
     } else if (strstr(request, "GET /led3/off")) {
         gpio_put(LED3_PIN, 0);
     }
-    // Comandos para controle do Buzzer via PWM
     else if (strstr(request, "GET /buzzer/on")) {
         buzzer_start(2000);  // Liga o buzzer com 2000 Hz
         sensor_alarm_triggered = false;
@@ -194,10 +157,8 @@ static err_t http_callback(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_
         buzzer_stop();
         sensor_alarm_triggered = false;
     }
-
     create_http_response();
     tcp_write(tpcb, http_response, strlen(http_response), TCP_WRITE_FLAG_COPY);
-
     pbuf_free(p);
     return ERR_OK;
 }
@@ -224,10 +185,49 @@ static void start_http_server(void) {
     printf("Servidor HTTP rodando na porta 80...\n");
 }
 
+// Função para atualizar o display OLED com informações do sistema
+void update_display() {
+    char buffer[32];
+    ssd1306_fill(&ssd, false);
+    // Exibe o cabeçalho
+    ssd1306_draw_string(&ssd,"House Control", 0, 0);
+
+    // Exibe o status do Wi-Fi e o IP, se conectado
+    if (cyw43_state.netif[0].ip_addr.addr != 0) {
+        snprintf(buffer, sizeof(buffer), "IP: %d.%d.%d.%d",
+                 ((uint8_t*)&(cyw43_state.netif[0].ip_addr.addr))[0],
+                 ((uint8_t*)&(cyw43_state.netif[0].ip_addr.addr))[1],
+                 ((uint8_t*)&(cyw43_state.netif[0].ip_addr.addr))[2],
+                 ((uint8_t*)&(cyw43_state.netif[0].ip_addr.addr))[3]);
+        ssd1306_draw_string(&ssd, "WiFi: Conectado",0, 10);
+        ssd1306_draw_string(&ssd, buffer, 0, 20);
+    } else {
+        ssd1306_draw_string(&ssd,"WiFi: Desconectado", 0, 10);
+    }
+    // Exibe os estados dos sensores
+    ssd1306_draw_string(&ssd,sensor1_message,0, 30);
+    ssd1306_draw_string(&ssd, sensor2_message,0, 40);
+    ssd1306_send_data(&ssd);
+}
+
 int main() {
     stdio_init_all();
     sleep_ms(10000);
     printf("Iniciando servidor HTTP\n");
+
+    // Inicializa o I2C para o display OLED
+    i2c_init(I2C_PORT, 400 * 1000);
+    gpio_set_function(I2C_SDA_PIN, GPIO_FUNC_I2C);
+    gpio_set_function(I2C_SCL_PIN, GPIO_FUNC_I2C);
+    gpio_pull_up(I2C_SDA_PIN);
+    gpio_pull_up(I2C_SCL_PIN);
+    // Inicializa o display OLED (verifique o endereço 0x3C, ajuste se necessário)
+    ssd.width  = 128;
+    ssd.height = 64;
+    ssd1306_init(&ssd, 128, 64, false, 0x3C, I2C_PORT);
+    ssd1306_config(&ssd);
+    ssd1306_fill(&ssd, false);
+    ssd1306_send_data(&ssd);
 
     // Inicializa o Wi-Fi
     if (cyw43_arch_init()) {
@@ -254,7 +254,7 @@ int main() {
     gpio_init(LED3_PIN);
     gpio_set_dir(LED3_PIN, GPIO_OUT);
 
-    // Configura o pino do Buzzer (a função buzzer_start() configura o pino para PWM)
+    // Configura o pino do Buzzer
     gpio_init(BUZZER_PIN);
     gpio_set_dir(BUZZER_PIN, GPIO_OUT);
 
@@ -278,30 +278,28 @@ int main() {
     while (true) {
         cyw43_arch_poll();
 
-        // Atualiza a mensagem do sensor A baseada no estado do alarme
+        // Atualiza as mensagens dos sensores
         if (sensor_alarm_triggered) {
             snprintf(sensor1_message, sizeof(sensor1_message), "Movimento detectado!");
         } else {
             snprintf(sensor1_message, sizeof(sensor1_message), "Nenhum movimento (Sensor A)");
         }
-
-        // Se o botão B for pressionado, atualiza a mensagem e entra em BOOTSEL
         if (sensor2_pressed) {
             snprintf(sensor2_message, sizeof(sensor2_message), "Entrando em BOOTSEL...");
             printf("Botão B pressionado: entrando em modo BOOTSEL\n");
-            sleep_ms(100);  // Pequena pausa para estabilização
+            sleep_ms(100);  // Pausa para estabilização
             reset_usb_boot(0, 0);
         } else {
             snprintf(sensor2_message, sizeof(sensor2_message), "Botão B: pressione para BOOTSEL");
         }
-
-        // Se o sensor A for acionado e o alarme ainda não estiver ativo, ativa o buzzer com PWM
+        
+        // Se o sensor A for acionado e o alarme não estiver ativo, ativa o buzzer
         if (sensor1_pressed && !sensor_alarm_triggered) {
             buzzer_start(2000);
             sensor_alarm_triggered = true;
             alarm_start_ms = to_ms_since_boot(get_absolute_time());
         }
-        // Desativa automaticamente o alarme após o tempo definido
+        // Desativa o alarme após 2 segundos
         if (sensor_alarm_triggered) {
             uint32_t current_ms = to_ms_since_boot(get_absolute_time());
             if (current_ms - alarm_start_ms >= ALARM_DURATION_MS) {
@@ -310,6 +308,9 @@ int main() {
                 printf("Alarme desligado automaticamente após %d ms\n", ALARM_DURATION_MS);
             }
         }
+        
+        // Atualiza o display OLED com as informações atuais
+        update_display();
 
         sleep_ms(100);
     }
