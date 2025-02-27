@@ -26,8 +26,8 @@
 #define BUTTON1_PIN 5    // Sensor de movimento - Botão A
 #define BUTTON2_PIN 6    // Botão B (usado para acionar o modo BOOTSEL)
 
-#define WIFI_SSID "Iago"          // Nome da rede Wi-Fi
-#define WIFI_PASS "Iago@8022"      // Senha da rede Wi-Fi
+#define WIFI_SSID "NomeDaRede"          // Nome da rede Wi-Fi
+#define WIFI_PASS "SenhaDaRede"      // Senha da rede Wi-Fi
 
 // Mensagens de estado
 char sensor1_message[50] = "Nenhum movimento (Sensor A)";
